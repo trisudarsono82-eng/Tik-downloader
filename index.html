@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Downloader</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* Menggunakan min-height agar bisa di-scroll jika hasil panjang */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 30px 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h2 {
+            color: #ff0050;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 85%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            outline: none;
+        }
+        button {
+            background-color: #00f2fe;
+            color: #000000;
+            border: none;
+            padding: 15px 20px;
+            width: 95%;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:active {
+            background-color: #00c2cb;
+        }
+        #hasilBox {
+            display: none; 
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #2a2a2a;
+            border-radius: 8px;
+        }
+        .btn-download {
+            background-color: #ff0050;
+            color: white;
+            margin-top: 10px;
+            text-decoration: none; /* Menghilangkan garis bawah pada link */
+            display: inline-block;
+            box-sizing: border-box;
+        }
+        .error-teks {
+            color: #ff4d4d;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>TikTok Video Downloader</h2>
+        <p>Unduh video tanpa watermark</p>
+        
+        <input type="text" id="inputUrl" placeholder="Tempel tautan video TikTok di sini...">
+        <button id="btnCari" onclick="prosesVideo()">Cari Video</button>
+
+        <div id="hasilBox">
+            <p id="statusTeks" style="color: #00f2fe; margin-bottom: 10px;">✅ Video Ditemukan!</p>
+            <!-- Kita ubah tombol menjadi tag 'a' agar berfungsi sebagai link unduhan -->
+            <a id="linkUnduh" href="#" target="_blank" class="btn-download" style="padding: 15px 20px; width: 85%; border-radius: 8px; font-weight: bold; text-align: center;">Unduh Video (MP4)</a>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi ini harus dibuat 'async' karena akan mengambil data dari luar
+        async function prosesVideo() {
+            let urlTikTok = document.getElementById("inputUrl").value;
+            let tombolCari = document.getElementById("btnCari");
+            let kotakHasil = document.getElementById("hasilBox");
+            let statusTeks = document.getElementById("statusTeks");
+            let linkUnduh = document.getElementById("linkUnduh");
+
+            if (urlTikTok === "") {
+                alert("Tolong masukkan tautan TikTok terlebih dahulu!");
+                return;
+            }
+
+            // Status Loading
+            tombolCari.innerText = "Mengekstrak Video...";
+            tombolCari.style.backgroundColor = "#555555";
+            tombolCari.style.color = "#ffffff";
+            kotakHasil.style.display = "none";
+            statusTeks.innerHTML = ""; 
+
+            try {
+                // Memanggil API (menggunakan tikwm API)
+                // API ini butuh parameter 'url'
+                let response = await fetch(`https://www.tikwm.com/api/?url=${encodeURIComponent(urlTikTok)}?hd=1`);
+                let data = await response.json();
+
+                // Mengecek apakah API berhasil mendapatkan video (kode 0 biasanya berarti sukses di tikwm)
+                if (data.code === 0) {
+                    // Video berhasil ditemukan
+                    statusTeks.innerHTML = "✅ Video Ditemukan!";
+                    statusTeks.style.color = "#00f2fe";
+                    
+                    // Memasukkan link video tanpa watermark dari API ke tombol unduh kita
+                    linkUnduh.href = data.data.play; 
+                    linkUnduh.style.display = "inline-block"; // Pastikan tombol unduh muncul
+                    
+                    kotakHasil.style.display = "block";
+                } else {
+                    // Jika gagal (misal: link salah atau video privat)
+                    statusTeks.innerHTML = "❌ Gagal. Pastikan link benar dan video tidak privat.";
+                    statusTeks.style.color = "#ff4d4d";
+                    linkUnduh.style.display = "none"; // Sembunyikan tombol unduh
+                    kotakHasil.style.display = "block";
+                }
+
+            } catch (error) {
+                // Jika server API sedang mati atau error koneksi
+                statusTeks.innerHTML = "❌ Terjadi kesalahan jaringan. Coba lagi nanti.";
+                statusTeks.style.color = "#ff4d4d";
+                linkUnduh.style.display = "none";
+                kotakHasil.style.display = "block";
+            } finally {
+                // Mengembalikan tombol cari ke semula, apa pun hasilnya
+                tombolCari.innerText = "Cari Video";
+                tombolCari.style.backgroundColor = "#00f2fe";
+                tombolCari.style.color = "#000000";
+            }
+        }
+    </script>
+
+</body>
+</html>
